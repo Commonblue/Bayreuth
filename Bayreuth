@@ -1,0 +1,467 @@
+rm(list = ls())
+library(dplyr);library(car);library(nlme);library(multcomp);library(effects)
+df2<-read.table("df2.txt",h=T,stringsAsFactor=T)
+
+
+
+plot(df2$hld~df2$tt)
+max(df2$hld)
+min(df2$hld)
+
+coplot(hld~total_mass|tt_n*tt_d,data=df2)
+coplot(hld~legu|tt_n*tt_d,data=df2)
+coplot(hld~forb|tt_n*tt_d,data=df2)
+coplot(hld~gras|tt_n*tt_d,data=df2)
+
+
+par(mfrow=c(2,2))
+plot(hld~gras,data=df2,main="G")
+plot(hld~forb,data=df2,main="F")
+plot(hld~legu,data=df2,main="L")
+plot(hld~total_mass,data=df2,main="G+F+L")
+#high F value
+
+round(tapply(df2$hld, df2$tt, mean),0)
+round(tapply(df2$hld, df2$tt, sd),0)
+
+tapply(df$hld,df$tt,mean);tapply(df$hld,df$tt,function(x) sd(x) / mean(x))
+
+
+#HLD----------------------------------------------------------
+plot(df2$hld~df2$tt)
+### NR-FA-4 = high value
+
+m0<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML")
+par(mfrow=c(2,4))
+qqnorm(scale(resid(m0)));abline(0,1,col=2)
+hist(resid(m0))
+plot(resid(m0)~fitted(m0),col=df2$tt);abline(h=0,col=2)
+plot(resid(m0)~df2$tt_n);abline(h=0,col=2)
+plot(resid(m0)~df2$tt_d);abline(h=0,col=2)
+plot(resid(m0)~df2$forb);abline(h=0,col=2)
+plot(resid(m0)~df2$gras);abline(h=0,col=2)
+plot(resid(m0)~df2$legu);abline(h=0,col=2)
+
+m1<-lme(hld~tt_n*tt_d+forb+gras+legu,random=~1|plot,data=df2,method="REML")
+anova(m0,m1)
+
+m2nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varIdent(form=~1|tt_d),varIdent(form=~1|tt_n)))
+m3nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varIdent(form=~1|tt_d)))
+m4nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varIdent(form=~1|tt_n)))
+m5nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varIdent(form=~1|tt)))
+m6nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varExp(form=~fitted(.)),varIdent(form=~1|tt_d)))
+m7nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varExp(form=~fitted(.))))
+m8nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varExp(form=~fitted(.)),varIdent(form=~1|tt_n)))
+m9nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varPower(form=~fitted(.))))
+m10nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varExp(form=~fitted(.)),varIdent(form=~1|tt)))
+m11nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varExp(form=~total_mass),varIdent(form=~1|tt_d)))
+m12nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varExp(form=~total_mass)))
+m13nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varExp(form=~total_mass),varIdent(form=~1|tt_n)))
+m14nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varPower(form=~total_mass)))
+m15nr<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="REML",weights=varComb(varExp(form=~total_mass),varIdent(form=~1|tt)))
+
+anova(m0,m2nr,m3nr,m4nr,m5nr,m6nr,m7nr,m8nr,m9nr,m10nr,m11nr,m12nr,m13nr,m14nr,m15nr)
+
+par(mfrow=c(2,4))
+qqnorm(scale(resid(m3nr,type="n")));abline(0,1,col=2)
+hist(resid(m3nr,type="n"),nclass=3)
+plot(resid(m3nr,type="n")~fitted(m3nr),col=df2$tt);abline(h=0,col=2)
+plot(resid(m3nr,type="n")~df2$tt_n);abline(h=0,col=2)
+plot(resid(m3nr,type="n")~df2$tt_d);abline(h=0,col=2)
+plot(resid(m3nr,type="n")~df2$forb);abline(h=0,col=2)
+plot(resid(m3nr,type="n")~df2$gras);abline(h=0,col=2)
+plot(resid(m3nr,type="n")~df2$legu);abline(h=0,col=2)
+
+
+m3.ml<-gls(hld~tt_n*tt_d+forb+gras+legu,data=df2,method="ML",weights=varComb(varIdent(form=~1|tt_d)))
+anova(m3.ml,type="marginal")
+m3.ml<-gls(hld~tt_n+tt_d+forb+gras+legu,data=df2,method="ML",weights=varComb(varIdent(form=~1|tt_d)))
+anova(m3.ml,type="marginal")
+m3.ml<-gls(hld~tt_n+tt_d+forb+gras,data=df2,method="ML",weights=varComb(varIdent(form=~1|tt_d)))
+anova(m3.ml,type="marginal")
+m3.ml<-gls(hld~tt_n+tt_d+gras,data=df2,method="ML",weights=varComb(varIdent(form=~1|tt_d)))
+anova(m3.ml,type="marginal")
+
+
+m3.reml<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varIdent(form=~1|tt_d)))
+par(mfrow=c(2,3))
+qqnorm(scale(resid(m3.reml,type="n")));abline(0,1,col=2)
+hist(resid(m3.reml,type="n"),nclass=3)
+plot(resid(m3.reml,type="n")~fitted(m3.reml),col=df2$tt);abline(h=0,col=2)
+plot(resid(m3.reml,type="n")~df2$tt_n);abline(h=0,col=2)
+plot(resid(m3.reml,type="n")~df2$tt_d);abline(h=0,col=2)
+plot(resid(m3.reml,type="n")~df2$gras);abline(h=0,col=2)
+
+
+m16<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varIdent(form=~1|tt_d),varIdent(form=~1|tt_n)))
+m17<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varIdent(form=~1|tt_d)))
+m18<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varIdent(form=~1|tt_n)))
+m19<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varIdent(form=~1|tt)))
+m20<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varExp(form=~fitted(.)),varIdent(form=~1|tt_d)))
+m21<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varExp(form=~fitted(.))))
+m22<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varExp(form=~fitted(.)),varIdent(form=~1|tt_n)))
+m23<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varPower(form=~fitted(.))))
+m24<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varExp(form=~fitted(.)),varIdent(form=~1|tt)))
+m25<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varExp(form=~gras),varIdent(form=~1|tt_d)))
+m26<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varExp(form=~gras)))
+m27<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varExp(form=~gras),varIdent(form=~1|tt_n)))
+m28<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varPower(form=~gras)))
+m29<-gls(hld~tt_n*tt_d*gras,data=df2,method="REML",weights=varComb(varExp(form=~gras),varIdent(form=~1|tt)))
+anova(m3.reml,m16,m17,m18,m19,m20,m21,m22,m23,m24,m25,m26,m27,m28,m29)
+
+par(mfrow=c(2,3))
+qqnorm(scale(resid(m21,type="n")));abline(0,1,col=2)
+hist(resid(m21,type="n"),nclass=3)
+plot(resid(m21,type="n")~fitted(m21),col=df2$tt);abline(h=0,col=2)
+plot(resid(m21,type="n")~df2$tt_n);abline(h=0,col=2)
+plot(resid(m21,type="n")~df2$tt_d);abline(h=0,col=2)
+plot(resid(m21,type="n")~df2$gras);abline(h=0,col=2)
+
+
+m21.ml<-gls(hld~tt_n*tt_d*gras,data=df2,method="ML",weights=varComb(varExp(form=~fitted(.))))
+anova(m21.ml,type="marginal")
+m21.ml<-update(m21.ml,~.-tt_n:tt_d:gras)
+anova(m21.ml,type="marginal")
+m21.ml<-update(m21.ml,~.-tt_n:tt_d:gras-tt_n:gras)
+anova(m21.ml,type="marginal")
+m21.ml<-update(m21.ml,~.-tt_n:tt_d:gras-tt_n:gras-tt_d:gras)
+anova(m21.ml,type="marginal")
+m21.ml<-gls(hld~tt_n+tt_d+gras,data=df2,method="ML",weights=varComb(varExp(form=~fitted(.))))
+anova(m21.ml,type="marginal")
+m21.ml<-gls(hld~tt_n+gras,data=df2,method="ML",weights=varComb(varExp(form=~fitted(.))))
+anova(m21.ml,type="marginal")
+
+m21.reml<-gls(hld~tt_n+gras,data=df2,method="REML",weights=varComb(varExp(form=~fitted(.))))
+anova(m21.reml,type="marginal")
+
+par(mfrow=c(2,3))
+qqnorm(scale(resid(m21,type="n")));abline(0,1,col=2)
+hist(resid(m21,type="n"),nclass=3)
+plot(resid(m21,type="n")~fitted(m21),col=df2$tt);abline(h=0,col=2)
+plot(resid(m21,type="n")~df2$tt_n);abline(h=0,col=2)
+plot(resid(m21,type="n")~df2$gras);abline(h=0,col=2)
+shapiro.test(resid(m21.reml))
+
+plot(allEffects(m21.reml))
+boxplot(df2$hld~df2$tt_n)
+boxplot(df2$hld~df2$tt)
+summary(m21.reml)
+
+
+m22.reml<-gls(hld~tt + gras,data=df2,method="REML",weights=varComb(varExp(form=~fitted(.))))
+anova(m22.reml,type="marginal")
+summary(m22.reml)
+emm <- emmeans(m22.reml, ~ tt) 
+pairs(emm, adjust = "tukey")
+
+
+#Veg total mass-------------------------------------------------------
+dfveg<- df2[!duplicated(df2$total_mass),]
+plot(dfveg$total_mass~dfveg$tt)
+#>400 IN C (NR-SC-1)
+
+
+coplot(total_mass~tt_n|tt_d,data=dfveg)
+tapply(dfveg$total_mass,dfveg$tt,mean);tapply(dfveg$total_mass,dfveg$tt,function(x) sd(x) / mean(x))
+
+
+m0<-gls(total_mass~tt_n*tt_d,data=dfveg,method="REML")
+par(mfrow=c(2,2))
+qqnorm(scale(resid(m0)));abline(0,1,col=2)
+plot(resid(m0)~fitted(m0),col=dfveg$tt);abline(h=0,col=2)
+plot(resid(m0)~dfveg$tt_n);abline(h=0,col=2)
+plot(resid(m0)~dfveg$tt_d);abline(h=0,col=2)
+
+m1<-gls(total_mass~tt_n*tt_d,data=dfveg,method="REML",weights=varComb(varIdent(form=~1|tt_d),varIdent(form=~1|tt_n)))
+m2<-gls(total_mass~tt_n*tt_d,data=dfveg,method="REML",weights=varComb(varIdent(form=~1|tt_d)))
+m3<-gls(total_mass~tt_n*tt_d,data=dfveg,method="REML",weights=varComb(varIdent(form=~1|tt_n)))
+m4<-gls(total_mass~tt_n*tt_d,data=dfveg,method="REML",weights=varComb(varIdent(form=~1|tt)))
+m5<-gls(total_mass~tt_n*tt_d,data=dfveg,method="REML",weights=varComb(varExp(form=~fitted(.))))
+m6<-gls(total_mass~tt_n*tt_d,data=dfveg,method="REML",weights=varComb(varExp(form=~fitted(.)),varIdent(form=~1|tt)))
+anova(m1,m2,m3,m4,m5,m6)
+
+par(mfrow=c(2,2))
+qqnorm(scale(resid(m4, type = "norm")));abline(0,1,col=2)
+plot(resid(m4, type = "norm")~fitted(m4), col = dfveg$tt);abline(h=0,col=2)
+plot(resid(m4, type = "norm")~dfveg$tt_n);abline(h=0,col=2)
+plot(resid(m4, type = "norm")~dfveg$tt_d);abline(h=0,col=2)
+
+m4.ml<-gls(total_mass~tt_n*tt_d,data=dfveg,method="ML",weights=varComb(varIdent(form=~1|tt)))
+anova(m4.ml,type="marginal")
+m4.ml<-gls(total_mass~tt_n+tt_d,data=dfveg,method="ML",weights=varComb(varIdent(form=~1|tt)))
+anova(m4.ml,type="marginal")
+m4.ml<-gls(total_mass~tt_d,data=dfveg,method="ML",weights=varComb(varIdent(form=~1|tt)))
+anova(m4.ml,type="marginal")
+
+m4.reml<-gls(total_mass~tt_d,data=dfveg,method="REML",weights=varComb(varIdent(form=~1|tt)))
+anova(m4.reml,type="marginal")
+
+par(mfrow=c(1,3))
+qqnorm(scale(resid(m4.reml, type = "norm")));abline(0,1,col=2)
+plot(resid(m4.reml, type = "norm")~fitted(m4.reml), col = dfveg$tt);abline(h=0,col=2)
+plot(resid(m4.reml, type = "norm")~dfveg$tt_d);abline(h=0,col=2)
+
+
+summary(m4.reml)
+plot(allEffects(m4.reml))
+#Veg per pft-----------------------------------------------------------------
+pft<-read.table("pft.txt",h=T,stringsAsFactor=T)
+
+coplot(mass~pft|tt_n*tt_d,data=pft)
+coplot(mass~mean|tt*pft,data=pft)
+
+tapply(pft$mass,list(pft$pft,pft$tt),mean);tapply(pft$mass,list(pft$pft,pft$tt),function(x) sd(x) / mean(x))
+
+
+m0<-gls(mass~pft*tt_n*tt_d,data=pft,method="REML")
+par(mfrow=c(2,3))
+qqnorm(scale(resid(m0)));abline(0,1,col=2)
+plot(resid(m0)~fitted(m0), col = pft$tt);abline(h=0,col=2)
+plot(resid(m0)~pft$tt_n);abline(h=0,col=2)
+plot(resid(m0)~pft$tt_d);abline(h=0,col=2)
+plot(resid(m0)~pft$pft);abline(h=0,col=2)
+plot(resid(m0)~pft$mean);abline(h=0,col=2)
+
+m1<-lme(mass~pft*tt_n*tt_d,random=~1|plot,data=pft,method="REML")
+anova(m0,m1)
+
+
+m2<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varIdent(form=~1|tt_d),varIdent(form=~1|tt_n)),data=pft,method="REML")
+m3<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varIdent(form=~1|tt_d)),data=pft,method="REML")
+m4<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varIdent(form=~1|tt_n)),data=pft,method="REML")
+m5<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varIdent(form=~1|tt)),data=pft,method="REML")
+m6<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varExp(form=~fitted(.)),varIdent(form=~1|tt_d),varIdent(form=~1|tt_n)),data=pft,method="REML")
+m7<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varExp(form=~mean),varIdent(form=~1|tt)),data=pft,method="REML")
+m8<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varExp(form=~fitted(.)),varIdent(form=~1|tt)),data=pft,method="REML")
+m9<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varExp(form=~mean),varIdent(form=~1|tt)),data=pft,method="REML")
+m10<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varIdent(form=~1|tt),varIdent(form=~1|pft)),data=pft,method="REML")
+m11<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varExp(form=~fitted(.)),varIdent(form=~1|tt),varIdent(form=~1|pft)),data=pft,method="REML")
+m12<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varExp(form=~fitted(.)),varIdent(form=~1|pft)),data=pft,method="REML")
+anova(m0,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12)
+
+par(mfrow=c(2,3))
+qqnorm(scale(resid(m10,type="norm")));abline(0,1,col=2)
+plot(resid(m10,type="norm")~fitted(m10), col = pft$tt);abline(h=0,col=2)
+plot(resid(m10,type="norm")~pft$tt_n);abline(h=0,col=2)
+plot(resid(m10,type="norm")~pft$tt_d);abline(h=0,col=2)
+plot(resid(m10,type="norm")~pft$pft);abline(h=0,col=2)
+plot(resid(m10,type="norm")~pft$mean);abline(h=0,col=2)
+
+
+m10.ml<-gls(mass~pft*tt_n*tt_d ,weights=varComb(varIdent(form=~1|tt),varIdent(form=~1|pft)),data=pft,method="ML")
+anova(m10.ml,type="marginal")
+m10.ml<-update(m10.ml,~.-pft:tt_n:tt_d)
+anova(m10.ml,type="marginal")
+m10.ml<-update(m10.ml,~.-pft:tt_d)
+anova(m10.ml,type="marginal")
+m10.ml<-update(m10.ml,~.-tt_n:tt_d)
+anova(m10.ml,type="marginal")
+
+m10.reml<-update(m10.ml,method="REML")
+
+library(emmeans)
+emm <- emmeans(m10.reml, ~ tt_d * tt_n | pft) #YES!!!!!
+pairs(emm, adjust = "tukey")
+
+par(mfrow=c(2,3))
+qqnorm(scale(resid(m10.reml,type="norm")));abline(0,1,col=2)
+plot(resid(m10.reml,type="norm")~fitted(m10.reml), col = pft$tt);abline(h=0,col=2)
+plot(resid(m10.reml,type="norm")~pft$tt_n);abline(h=0,col=2)
+plot(resid(m10.reml,type="norm")~pft$tt_d);abline(h=0,col=2)
+plot(resid(m10.reml,type="norm")~pft$pft);abline(h=0,col=2)
+plot(resid(m10.reml,type="norm")~pft$mean);abline(h=0,col=2)
+
+summary(m10.reml)
+plot(allEffects(m10.reml))
+plot(allEffects(m10.reml),multiline=T)
+
+
+
+
+
+interaction.plot(
+  x.factor = pft$pft,
+  trace.factor = pft$tt,
+  response = pft$mass,
+  fun = mean,
+  type = "b",
+  legend = TRUE,
+  ylab = "Mass",
+  xlab = "PFT",
+  trace.label = "Drought Treatment",
+  col = c("black", "red", "blue", "green"),
+  pch = c(16, 16)
+)
+
+
+
+boxplot(Nean$gras~Nean$tt)
+
+
+#Ratio ------------------------------------------------------------------------
+#needs to be checked once more.
+### HLD TO ANPP RATIO
+
+### DOES HLD/ANPP RATIO MAKE SENSE ONLY FOR RESPONSIVE MASS (IE, THE GRASS ONE)? YES
+### WHICH DATASET IS THE MOST APPROPRIATE? THE ONE WITH MEAN VALUES
+### THERE IS A MEANINGFUL UNIT OF MEASURE? MAYBE
+### IT MAKES MORE SENSE HLD/ANPP OR ANPP/HLD? THE FIRST
+
+### ASSUMING A BULK DENSITY OF 1 G CM^-3 (https://esdac.jrc.ec.europa.eu/themes/soil-bulk-density-assessments)
+library(dplyr); library(tidyverse)
+Nean <- df2 %>%
+  group_by(plot) %>%
+  mutate(mean = mean(hld)) %>%
+  dplyr::select(-hld)  # This removes the 'hld' column
+
+
+### MESHBAG VOLUME IN CM^3
+(vol.mg<-13*2*3)
+
+### M OF HLD per Meshbag. 
+###~= per surface of meshbag --> M hyphae/surface meshbag
+### M hyphae/m2
+((Nean$mean/1000)*vol.mg*(10000/6))
+
+
+### HLD IN M / ANPP of grass IN MG
+
+Nean$ratio<-(((Nean$mean/1000)*vol.mg*(10000/3.8))/(Nean$gras*1000))
+Nean <- Nean[!duplicated(Nean$ratio), ]
+
+
+tapply(Nean$ratio,Nean$tt,mean)
+tapply(Nean$ratio,Nean$tt,sd)
+
+m0<-gls(ratio~tt_n*tt_d,data=Nean, method = "REML")
+
+par(mfrow=c(2,3))
+qqnorm(scale(resid(m0)));abline(0,1,col=2)
+hist(resid(m0),nclass=3)
+plot(resid(m0)~fitted(m0), col = df$tt);abline(h=0,col=2)
+plot(resid(m0)~Nean$tt_n);abline(h=0,col=2)
+plot(resid(m0)~Nean$tt_d);abline(h=0,col=2)
+
+m1<-gls(ratio~tt_n*tt_d,data=Nean,method="REML",weights=varComb(varIdent(form=~1|tt_d),varIdent(form=~1|tt_n)))
+m2<-gls(ratio~tt_n*tt_d,data=Nean,method="REML",weights=varComb(varIdent(form=~1|tt_d)))
+m3<-gls(ratio~tt_n*tt_d,data=Nean,method="REML",weights=varComb(varIdent(form=~1|tt_n)))
+m4<-gls(ratio~tt_n*tt_d,data=Nean,method="REML",weights=varComb(varIdent(form=~1|tt)))
+m5<-gls(ratio~tt_n*tt_d,data=Nean,method="REML",weights=varComb(varExp(form=~fitted(.))))
+m6<-gls(ratio~tt_n*tt_d,data=Nean,method="REML",weights=varComb(varIdent(form=~1|tt_n),varExp(form=~fitted(.))))
+m7<-gls(ratio~tt_n*tt_d,data=Nean,method="REML",weights=varComb(varIdent(form=~1|tt_d),varExp(form=~fitted(.))))
+m8<-gls(ratio~tt_n*tt_d,data=Nean,method="REML",weights=varComb(varIdent(form=~1|tt),varExp(form=~fitted(.))))
+m9<-gls(ratio~tt_n*tt_d,data=Nean,method="REML",weights=varComb(varIdent(form=~1|tt_n),varIdent(form=~1|tt_d),varExp(form=~fitted(.))))
+anova(m0,m1,m2,m3,m4,m5,m6,m7,m8,m9)
+
+par(mfrow=c(2,3))
+qqnorm(scale(resid(m1, type = "norm")));abline(0,1,col=2)
+hist(resid(m1,type="norm"),nclass=3) # FXXK!
+plot(resid(m1,type="norm")~fitted(m1), col = df$tt);abline(h=0,col=2)
+plot(resid(m1,type="norm")~Nean$tt_n);abline(h=0,col=2)
+plot(resid(m1,type="norm")~Nean$tt_d);abline(h=0,col=2)
+
+m1.ml<-gls(ratio~tt_n*tt_d,data=Nean,method="ML",weights=varComb(varIdent(form=~1|tt_d),varIdent(form=~1|tt_n)))
+anova(m1.ml,type="marginal")
+m1.ml<-gls(ratio~tt_n+tt_d,data=Nean,method="ML",weights=varComb(varIdent(form=~1|tt_d),varIdent(form=~1|tt_n)))
+anova(m1.ml,type="marginal")
+m1.ml<-gls(ratio~tt_n,data=Nean,method="ML",weights=varComb(varIdent(form=~1|tt_d),varIdent(form=~1|tt_n)))
+anova(m1.ml,type="marginal")
+
+m1.reml<-gls(ratio~tt_n,data=Nean,method="REML",weights=varComb(varIdent(form=~1|tt_d),varIdent(form=~1|tt_n)))
+anova(m1.reml,type="marginal")
+summary(m1.reml)
+
+emm <- emmeans(m1.reml, ~ tt_n) 
+pairs(emm, adjust = "tukey")
+
+m2.reml<-gls(ratio~tt,data=Nean,method="REML",weights=varComb(varIdent(form=~1|tt_d),varIdent(form=~1|tt_n)))
+emm <- emmeans(m2.reml, ~ tt) 
+pairs(emm, adjust = "tukey")
+
+plot(Nean$ratio~Nean$tt)
+
+
+### FERTILIZATION DECREASE THE RATIO BETWEEN HLD AND ANPP
+### UNDER HIGH NUTRIENT LEVEL THERE ARE 1.4 M LESS OF HYPHAE PER MG OF GRASS ANPP
+par(mfrow=c(2,2))
+qqnorm(scale(resid(m1.reml, type = "norm")));abline(0,1,col=2)
+hist(resid(m1.reml,type="norm"),nclass=3)
+plot(resid(m1.reml,type="norm")~fitted(m1.reml), col = df$tt);abline(h=0,col=2)
+plot(resid(m1.reml,type="norm")~Nean$tt_n);abline(h=0,col=2)
+
+m1.pars<-gls(ratio~tt_n,data=Nean,method="REML",weights=varComb(varIdent(form=~1|tt_n)))
+anova(m1.reml,m1.pars)
+
+
+
+par(mfrow=c(2,2))
+qqnorm(scale(resid(m1.pars, type = "norm")));abline(0,1,col=2)
+hist(resid(m1.pars,type="norm"),nclass=3)
+plot(resid(m1.pars,type="norm")~fitted(m1.pars), col = df$tt);abline(h=0,col=2)
+plot(resid(m1.pars,type="norm")~Nean$tt_n);abline(h=0,col=2)
+
+
+
+### BETTER M1.REML
+
+library(effects)
+plot(allEffects(m1.reml)) # I DON'T KNOW WHY IT DOEN'T WORK...
+#it did not like "mean" it did like "Nean"
+
+
+mean(Nean$mean)
+
+plot(Nean$mean~Nean$gras,
+     xlab = "Gras g/m2",
+     ylab = "HLD mm/g soil")
+
+plot(Nean$gras * 1000,
+     (Nean$mean / 1000),
+     xlab = "Gras mg/m2",
+     ylab = "HLD M/g soil")
+
+plot(
+  Nean$gras * 1000,
+  (Nean$mean / 1000) * vol.mg * (10000 / 3.8),
+  xlab = "Gras (adjusted)",
+  ylab = "Calculated value",
+  main = "Your Plot Title"
+)
+
+boxplot(Nean$ratio~Nean$tt)
+
+#############################################
+# Load ggplot2
+library(ggplot2)
+library(nlme)
+library(AICcmodavg)
+
+model<-gls(hld~tt_n+gras,data=df2,method="REML",weights=varComb(varExp(form=~fitted(.))))
+
+
+# 2. Create prediction grid
+newdata <- expand.grid(
+  gras = seq(min(Nean$gras), max(Nean$gras), length = 100),
+  tt_n = unique(Nean$tt_n)
+)
+
+# 3. Predict with SE
+pred <- predictSE.gls(model, newdata, se.fit = TRUE)
+
+newdata$fit <- pred$fit
+newdata$se <- pred$se.fit
+newdata$lower <- newdata$fit - 1.96 * newdata$se
+newdata$upper <- newdata$fit + 1.96 * newdata$se
+
+# 4. Plot
+ggplot(newdata, aes(x = gras, y = fit, color = tt_n, fill = tt_n)) +
+  geom_line(size = 1) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3, color = NA) +
+  labs(
+    x = "Gras g/m²",
+    y = "HLD mm/g soil",
+    color = "Treatment",
+    fill = "Treatment"
+  ) +
+  theme_minimal()
+
